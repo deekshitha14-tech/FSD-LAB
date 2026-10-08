@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Weather Forecast Dashboard</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            min-height: 100vh;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 25px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-box select {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .search-box button {
+            padding: 14px 25px;
+            border: none;
+            border-radius: 8px;
+            background: #222;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .search-box button:hover {
+            background: #444;
+        }
+
+        #message {
+            text-align: center;
+            color: white;
+            margin: 15px;
+            font-size: 18px;
+        }
+
+        .current-weather {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        #location {
+            font-size: 28px;
+            margin-bottom: 15px;
+        }
+
+        .temperature {
+            font-size: 60px;
+            font-weight: bold;
+            color: #2196f3;
+        }
+
+        #description {
+            font-size: 20px;
+            margin: 10px 0 25px;
+        }
+
+        .details {
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+        }
+
+        .details div {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .forecast-title {
+            color: white;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .forecast {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+        }
+
+        .forecast-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .forecast-card h3 {
+            margin-bottom: 10px;
+        }
+
+        .forecast-card p {
+            margin: 8px 0;
+        }
+
+        .forecast-card .temp {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2196f3;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 700px) {
+
+            .search-box {
+                flex-direction: column;
+            }
+
+            .forecast {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .details {
+                gap: 20px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>🌤️ Weather Forecast Dashboard</h1>
+
+        <div class="search-box">
+
+            <select id="citySelect">
+
+                <option value="">-- Select a City --</option>
+
+                <option value="Hyderabad">Hyderabad</option>
+                <option value="Bengaluru">Bengaluru</option>
+                <option value="Chennai">Chennai</option>
+                <option value="Mumbai">Mumbai</option>
+                <option value="Delhi">Delhi</option>
+                <option value="Kolkata">Kolkata</option>
+                <option value="Pune">Pune</option>
+                <option value="Vijayawada">Vijayawada</option>
+                <option value="Visakhapatnam">Visakhapatnam</option>
+                <option value="Tirupati">Tirupati</option>
+
+            </select>
+
+            <button id="searchBtn">
+                Get Weather
+            </button>
+
+        </div>
+
+        <p id="message"></p>
+
+        <div id="weather" class="hidden">
+
+            <div class="current-weather">
+
+                <h2 id="location"></h2>
+
+                <div class="temperature">
+                    <span id="temperature"></span>°C
+                </div>
+
+                <p id="description"></p>
+
+                <div class="details">
+
+                    <div>
+                        💧
+                        <strong>Humidity</strong>
+                        <span id="humidity"></span>%
+                    </div>
+
+                    <div>
+                        💨
+                        <strong>Wind</strong>
+                        <span id="wind"></span> km/h
+                    </div>
+
+                </div>
+
+            </div>
+
+            <h2 class="forecast-title">
+                15-Day Forecast
+            </h2>
+
+            <div id="forecast" class="forecast"></div>
+
+        </div>
+
+    </div>
+
+    <script>
+
+        const citySelect =
+            document.getElementById("citySelect");
+
+        const searchBtn =
+            document.getElementById("searchBtn");
+
+        const weatherDiv =
+            document.getElementById("weather");
+
+        const message =
+            document.getElementById("message");
+
+        const locationElement =
+            document.getElementById("location");
+
+        const temperatureElement =
+            document.getElementById("temperature");
+
+        const descriptionElement =
+            document.getElementById("description");
+
+        const humidityElement =
+            document.getElementById("humidity");
+
+        const windElement =
+            document.getElementById("wind");
+
+        const forecastDiv =
+            document.getElementById("forecast");
+
+
+        searchBtn.addEventListener(
+            "click",
+            getWeather
+        );
+
+
+        async function getWeather() {
+
+            const city =
+                citySelect.value;
+
+            if (city === "") {
+
+                message.textContent =
+                    "Please select a city.";
+
+                weatherDiv.classList.add("hidden");
+
+                return;
+            }
+
+            message.textContent =
+                "Loading weather data...";
+
+            weatherDiv.classList.add("hidden");
+
+            try {
+
+                const geoURL =
+                    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`;
+
+                const geoResponse =
+                    await fetch(geoURL);
+
+                if (!geoResponse.ok) {
+                    throw new Error(
+                        "Unable to find city."
+                    );
+                }
+
+                const geoData =
+                    await geoResponse.json();
+
+                if (
+                    !geoData.results ||
+                    geoData.results.length === 0
+                ) {
+                    throw new Error(
+                        "City not found."
+                    );
+                }
+
+                const location =
+                    geoData.results[0];
+
+                const latitude =
+                    location.latitude;
+
+                const longitude =
+                    location.longitude;
+
+
+                const weatherURL =
+                    `https://api.open-meteo.com/v1/forecast` +
+                    `?latitude=${latitude}` +
+                    `&longitude=${longitude}` +
+                    `&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code` +
+                    `&daily=weather_code,temperature_2m_max,temperature_2m_min` +
+                    `&timezone=auto` +
+                    `&forecast_days=15`;
+
+
+                const weatherResponse =
+                    await fetch(weatherURL);
+
+                if (!weatherResponse.ok) {
+                    throw new Error(
+                        "Unable to fetch weather data."
+                    );
+                }
+
+                const weatherData =
+                    await weatherResponse.json();
+
+                displayWeather(
+                    location,
+                    weatherData
+                );
+
+                message.textContent = "";
+
+                weatherDiv.classList.remove(
+                    "hidden"
+                );
+
+            }
+
+            catch (error) {
+
+                message.textContent =
+                    error.message;
+
+                weatherDiv.classList.add(
+                    "hidden"
+                );
+
+            }
+
+        }
+
+
+        function displayWeather(
+            location,
+            data
+        ) {
+
+            locationElement.textContent =
+                `${location.name}, ${location.country}`;
+
+            temperatureElement.textContent =
+                Math.round(
+                    data.current.temperature_2m
+                );
+
+            descriptionElement.textContent =
+                getWeatherDescription(
+                    data.current.weather_code
+                );
+
+            humidityElement.textContent =
+                data.current.relative_humidity_2m;
+
+            windElement.textContent =
+                data.current.wind_speed_10m;
+
+            displayForecast(
+                data.daily
+            );
+
+        }
+
+
+        function displayForecast(
+            daily
+        ) {
+
+            forecastDiv.innerHTML = "";
+
+            for (
+                let i = 0;
+                i < daily.time.length;
+                i++
+            ) {
+
+                const date =
+                    new Date(
+                        daily.time[i]
+                    );
+
+                const dayName =
+                    date.toLocaleDateString(
+                        "en-US",
+                        {
+                            weekday: "short",
+                            month: "short",
+                            day: "numeric"
+                        }
+                    );
+
+                const card =
+                    document.createElement(
+                        "div"
+                    );
+
+                card.classList.add(
+                    "forecast-card"
+                );
+
+                card.innerHTML = `
+
+                    <h3>
+                        ${dayName}
+                    </h3>
+
+                    <p>
+                        ${getWeatherDescription(
+                            daily.weather_code[i]
+                        )}
+                    </p>
+
+                    <p class="temp">
+                        ${Math.round(
+                            daily.temperature_2m_max[i]
+                        )}°C
+                    </p>
+
+                    <p>
+                        Min:
+                        ${Math.round(
+                            daily.temperature_2m_min[i]
+                        )}°C
+                    </p>
+
+                `;
+
+                forecastDiv.appendChild(
+                    card
+                );
+
+            }
+
+        }
+
+
+        function getWeatherDescription(
+            code
+        ) {
+
+            const weatherCodes = {
+
+                0: "Clear sky",
+                1: "Mainly clear",
+                2: "Partly cloudy",
+                3: "Overcast",
+                45: "Fog",
+                48: "Rime fog",
+                51: "Light drizzle",
+                53: "Moderate drizzle",
+                55: "Dense drizzle",
+                61: "Slight rain",
+                63: "Moderate rain",
+                65: "Heavy rain",
+                71: "Slight snowfall",
+                73: "Moderate snowfall",
+                75: "Heavy snowfall",
+                80: "Slight rain showers",
+                81: "Moderate rain showers",
+                82: "Heavy rain showers",
+                95: "Thunderstorm"
+
+            };
+
+            return (
+                weatherCodes[code] ||
+                "Unknown weather"
+            );
+
+        }
+
+    </script>
+
+</body>
+
+</html>
